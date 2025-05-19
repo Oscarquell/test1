@@ -59,7 +59,6 @@ const links = computed(() => {
           return children;
         }
       }
-
       return null;
     }).flat()
     .filter(Boolean);
