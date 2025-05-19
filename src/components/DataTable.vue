@@ -131,7 +131,7 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import Search from '@/components/Search.vue';
 
 export default {

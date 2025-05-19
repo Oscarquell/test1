@@ -38,7 +38,7 @@
   </v-dialog>
 </template>
 
-<script>
+<script setup lang="ts">
 export default {
   name: 'ConfirmDialog',
   props: {
