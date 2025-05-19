@@ -1,13 +1,13 @@
 <template>
   <v-dialog
-    v-model="dialog"
+    v-model="localDialog"
     :max-width="maxWidth"
     @update:model-value="handleUpdateDialog"
   >
     <v-card class="pa-3">
       <v-card-title style="text-align: center">
         <v-spacer />
-        <!--eslint-disable-next-line vue/no-v-html -->
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <span v-html="title" />
         <v-spacer />
       </v-card-title>
@@ -38,7 +38,7 @@
   </v-dialog>
 </template>
 
-<script> 
+<script>
 export default {
   name: 'ConfirmDialog',
   props: {
@@ -59,38 +59,39 @@ export default {
       default: false,
     },
   },
-  data: () => ({
-    loading: false,
-  }),
-  computed: {
-    dialog: {
-      get() {
-        return !!this.modelValue;
-      },
-      set(val) {
-        if (!val) this.$emit('update:modelValue');
-      },
+  data() {
+    return {
+      loading: false,
+      localDialog: !!this.modelValue,
+    };
+  },
+  watch: {
+    modelValue(val) {
+      this.localDialog = !!val;
+    },
+    localDialog(val) {
+      this.$emit('update:modelValue', val);
     },
   },
   methods: {
     close() {
-      this.dialog = false;
+      this.localDialog = false;
       this.loading = false;
       this.$emit('handleCancel');
     },
-    handleUpdateDialog(e) {
-      if (!e) {
+    handleUpdateDialog(val) {
+      if (!val) {
         this.$emit('handleCancel');
       }
     },
     async confirm() {
       this.loading = true;
-      if (this.modelValue instanceof Function) {
+      if (typeof this.modelValue === 'function') {
         this.modelValue().finally(this.close);
       } else {
-        await this.$emit('handleOk', ()=> {
+        await this.$emit('handleOk', () => {
           this.loading = false;
-          this.dialog = false;
+          this.localDialog = false;
         });
       }
     },
@@ -99,5 +100,4 @@ export default {
 </script>
 
 <style scoped>
-
 </style>

@@ -1,4 +1,4 @@
-<template> 
+<template>
   <v-container>
     <v-row>
       <v-col md="4">
@@ -39,59 +39,61 @@
   </v-container>
 </template>
 
-<script> 
-export default {
-  props: {
-    modelValue: { type: String, default: '' },
-    showSearchBtn: { type: Boolean, default: false },
-    debounceTime: { type: [Number,String], default: 0 },
-    density: { type: String, default: 'compact' },
-    variant: { type: String, default: 'outlined' },
+<script setup lang="ts">
+import { ref, watch } from 'vue';
 
-  },
-  data: () => ({
-    timeoutId: null,
-    searchValue: '',
-  }),
-  computed: {
-    timeout() {
-      return Number.isNaN(parseInt(this.debounceTime)) ? 0 : this.debounceTime;
-    },
-  },
-  methods: {
-    clear() {
-      this.$emit('update:model-value', '');
-      this.$emit('search', '');
-      clearTimeout(this.timeoutId);
-    },
-    searchItem() {
-      this.$emit('search', this.searchValue);
-    },
-    handleUpdate(e) {
-      this.$emit('update:model-value', e);
-      this.searchValue = e;
-      if (!this.modelValue && !this.showSearchBtn) {
-        this.searchItem();
-      }
-    },
-    debounce(e) {
-      if (this.timeoutId) { 
-        clearTimeout(this.timeoutId);
-      }
-      this.timeoutId = setTimeout(() => this.handleUpdate(e), this.timeout);
-    },
-  },
-};
+const props = defineProps<{
+  modelValue?: string;
+  showSearchBtn?: boolean;
+  debounceTime?: number | string;
+  density?: string;
+  variant?: string;
+}>();
+
+const emit = defineEmits<{
+  (e: 'update:model-value', value: string): void;
+  (e: 'search', value: string): void;
+}>();
+
+const timeoutId = ref<ReturnType<typeof setTimeout> | null>(null);
+const searchValue = ref(props.modelValue || '');
+
+const timeout = Number.isNaN(parseInt(props.debounceTime as string)) ? 0 : Number(props.debounceTime);
+
+function clear() {
+  emit('update:model-value', '');
+  emit('search', '');
+  if (timeoutId.value) clearTimeout(timeoutId.value);
+}
+
+function searchItem() {
+  emit('search', searchValue.value);
+}
+
+function handleUpdate(value: string) {
+  emit('update:model-value', value);
+  searchValue.value = value;
+  if (!value && !props.showSearchBtn) {
+    searchItem();
+  }
+}
+
+function debounce(value: string) {
+  if (timeoutId.value) {
+    clearTimeout(timeoutId.value);
+  }
+  timeoutId.value = setTimeout(() => handleUpdate(value), timeout);
+}
 </script>
 
 <style scoped>
-    .col-md-4 {
-        padding: 12px 0;
-    }
-    .col-md-2 {
-        padding: 12px 0;
-    }
-    .mx-2 {
-        margin: 0 0 0 8px !important;
-    }
+.col-md-4 {
+  padding: 12px 0;
+}
+.col-md-2 {
+  padding: 12px 0;
+}
+.mx-2 {
+  margin: 0 0 0 8px !important;
+}
 </style>

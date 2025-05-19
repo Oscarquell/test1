@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, watch, ref } from 'vue';
 
 const props = defineProps<{
   dialog: boolean;
@@ -13,18 +13,33 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
+// Локальное состояние диалога
+const localDialog = ref(props.dialog);
+
+// Синхронизация внешнего пропса с локальным состоянием
+watch(() => props.dialog, (val) => {
+  localDialog.value = val;
+});
+
+// Эмитим наружу, если локальное состояние изменилось
+watch(localDialog, (val) => {
+  emit('update:dialog', val);
+});
+
 const close = () => {
-  emit('update:dialog', false);
+  localDialog.value = false;
   emit('close');
 };
 
 const confirm = () => {
   emit('confirm');
+  localDialog.value = false;
+  emit('close');
 };
 </script>
 
 <template>
-  <v-dialog v-model="props.dialog" max-width="500px" persistent>
+  <v-dialog v-model="localDialog" max-width="500px" persistent>
     <v-card>
       <v-card-title class="text-h6">
         {{ title }}

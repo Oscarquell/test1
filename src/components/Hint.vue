@@ -1,4 +1,4 @@
-<template> 
+<template>
   <v-tooltip
     :text="msg"
     :location="left ? 'start' : location"
@@ -11,14 +11,12 @@
   </v-tooltip>
 </template>
 
-<script> 
+<script setup lang="ts">
+import { defineProps } from 'vue';
 
-export default {
-  name: 'Hint',
-  props: {
-    msg: { type: String, default: 'подсказка' },
-    location: { type: String, default: 'bottom' },
-    left: { type: Boolean, default: false },
-  },
-};
+defineProps<{
+  msg?: string;
+  location?: string;
+  left?: boolean;
+}>();
 </script>

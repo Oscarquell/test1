@@ -2,7 +2,7 @@
   <div class="data-table__wrapper">
     <v-data-table
       v-model:expanded="expandedArr"
-      :model-value="modelValue"
+      :model-value="localModelValue"
       :headers="sortedColumns"
       :items="items"
       :search="searchModel"
@@ -12,7 +12,7 @@
       :item-value="itemValue || itemKey"
       :loading="loading"
       loading-text="Загрузка... Подождите немного"
-      no-data-text="Не уадлось получить данные"
+      no-data-text="Не удалось получить данные"
       no-results-text="Нет совпадений"
       multi-sort
       :show-expand="expand"
@@ -26,45 +26,24 @@
       :sort-by="sortBy"
       :custom-filter="customFilter"
       :custom-key-sort="customKeySort"
-      :expand-on-click
+      :expand-on-click="expandOnClick"
       :page="page"
       :show-select="select"
       :hover="hover"
       :return-object="isReturnObject"
       @update:expanded="expandItem"
-      @update:model-value="$emit('update:modelValue', $event)"
+      @update:model-value="updateModelValue"
     >
-      <template
-        v-if="!hideHeader"
-        #top="props"
-      >
-        <slot
-          name="top"
-          v-bind="props"
-        >
-          <v-toolbar
-            flat
-            :height="toolbarHeight"
-            color="whiteBlack"
-          >
+      <template v-if="!hideHeader" #top="props">
+        <slot name="top" v-bind="props">
+          <v-toolbar flat :height="toolbarHeight" color="whiteBlack">
             <div class="data-table-toolbar-content d-flex justify-between ">
-              <slot
-                v-if="$slots['search']"
-                name="search"
-              />
+              <slot v-if="$slots['search']" name="search" />
               <slot v-else-if="!searchOff">
-                <search
-                  v-model="searchModel"
-                  density="compact"
-                  debounce-time="600"
-                />
+                <search v-model="searchModel" density="compact" debounce-time="600" />
               </slot>
               <v-spacer v-if="$slots['top-button']" />
-              <slot
-                v-if="$slots['top-button']"
-                name="top-button"
-                v-bind="props"
-              />
+              <slot v-if="$slots['top-button']" name="top-button" v-bind="props" />
             </div>
           </v-toolbar>
           <v-divider />
@@ -73,40 +52,22 @@
         <div class="data-table__settings d-flex gap-2 align-center my-1">
           <v-menu v-if="$isMobile">
             <template #activator="{ props: menuActivatorProps }">
-              <v-btn
-                icon="settings"
-                variant="text"
-                v-bind="menuActivatorProps"
-              />
+              <v-btn icon="settings" variant="text" v-bind="menuActivatorProps" />
             </template>
             <v-list>
               <v-radio-group v-model="settingValue">
-                <v-list-item
-                  v-for="(setting, index) in settings"
-                  :key="index"
-                >
-                  <v-radio
-                    :value="setting.value"
-                    :label="setting.label"
-                    @click.stop
-                  />
+                <v-list-item v-for="(setting, index) in settings" :key="index">
+                  <v-radio :value="setting.value" :label="setting.label" @click.stop />
                 </v-list-item>
               </v-radio-group>
             </v-list>
           </v-menu>
           <v-menu>
             <template #activator="{ props: colMenuProps }">
-              <v-btn
-                icon="menu"
-                variant="text"
-                v-bind="colMenuProps"
-              />
+              <v-btn icon="menu" variant="text" v-bind="colMenuProps" />
             </template>
             <v-list>
-              <v-list-item
-                v-for="(column, index) in headers"
-                :key="index"
-              >
+              <v-list-item v-for="(column, index) in headers" :key="index">
                 <v-checkbox
                   v-if="column"
                   v-model="columns"
@@ -122,67 +83,39 @@
         </div>
       </template>
 
-      <template
-        v-if="$slots['header']"
-        #header="props"
-      >
-        <slot
-          name="header"
-          v-bind="props"
-        />
+      <template v-if="$slots['header']" #header="props">
+        <slot name="header" v-bind="props" />
       </template>
 
       <template
         v-for="(slot, i) in Object.keys($slots).filter(v => !['header', 'top'].includes(v))"
         #[slot]="props"
       >
-        <slot
-          :key="i"
-          :name="slot"
-          v-bind="props"
-        />
+        <slot :key="i" :name="slot" v-bind="props" />
       </template>
+
       <template #no-data>
-        <v-alert
-          color="primary"
-          icon="help"
-          class="my-1"
-        >
+        <v-alert color="primary" icon="help" class="my-1">
           Нет данных для отображения :(
         </v-alert>
       </template>
+
       <template #bottom>
         <v-container v-if="!hideFooter">
           <v-row class="pagination-row">
-            <v-col
-              md="6"
-            >
-              <v-pagination
-                v-model="page"
-                :length="pageCount"
-                size="small"
-              />
+            <v-col md="6">
+              <v-pagination v-model="page" :length="pageCount" size="small" />
             </v-col>
             <v-spacer />
-            <v-col
-              v-if="items.length > 0"
-              md="2"
-              class="pagination-value"
-            >
+            <v-col v-if="items.length > 0" md="2" class="pagination-value">
               <p>{{ elementsShown - itemsPerPage + 1 }}-{{ elementsShown }} из {{ items.length }}</p>
             </v-col>
             <v-spacer />
-            <v-col
-              class="pagination-value"
-              md="2"
-            >
+            <v-col class="pagination-value" md="2">
               <v-spacer />
               <p>Строк на странице</p>
             </v-col>
-            <v-col
-              class="pagination-value-select"
-              md="1"
-            >
+            <v-col class="pagination-value-select" md="1">
               <v-select
                 v-model="itemsPerPage"
                 variant="outlined"
@@ -210,7 +143,7 @@ export default {
     expanded: { type: Array, default: () => [] },
     modelValue: { type: Array, default: () => [] },
     headers: { type: Array, required: true, default: () => [] },
-    items: { type: Array, required: true, default: ()=> [] },
+    items: { type: Array, required: true, default: () => [] },
     sortBy: { type: Array, default: () => [] },
     search: { type: String, default: '' },
     itemKey: { type: String, default: 'id' },
@@ -243,7 +176,11 @@ export default {
     expandedArr: [],
     columns: [],
     settingValue: 'table',
-    settings: [ { label: 'таблица', value: 'table' }, { label: 'карточки', value: 'cards' }],
+    settings: [
+      { label: 'таблица', value: 'table' },
+      { label: 'карточки', value: 'cards' },
+    ],
+    localModelValue: [],
   }),
   computed: {
     $isMobile() {
@@ -257,18 +194,18 @@ export default {
     },
     sortedColumns() {
       const res = [];
-      this.columns.forEach(col => {
+      this.columns.forEach((col) => {
         if (col.default) {
           if (typeof col.value === 'string') {
             col.key = col.key ?? col.value;
             col.value = null;
           }
-          const cb = i => i[col.key] ?? col.default;
+          const cb = (i) => i[col.key] ?? col.default;
           col.value = col.value || cb;
         }
-        const idx = this.headers.findIndex(i => {
+        const idx = this.headers.findIndex((i) => {
           const key = i['key'] ? 'key' : 'value';
-          return  i[key] === col[key];
+          return i[key] === col[key];
         });
         if (idx > -1 && col) {
           res[idx] = col;
@@ -283,7 +220,11 @@ export default {
       this.page = 1;
     },
     modelValue(newVal) {
+      this.localModelValue = newVal;
       this.$emit('selected', newVal);
+    },
+    localModelValue(newVal) {
+      this.$emit('update:modelValue', newVal);
     },
     expanded() {
       this.expandedArr = this.expanded;
@@ -293,12 +234,11 @@ export default {
     },
     headers: {
       handler() {
-        this.columns =  [...this.headers];
+        this.columns = [...this.headers];
       },
       immediate: true,
       deep: true,
     },
-
   },
   created() {
     if (this.hideFooter) {
@@ -312,6 +252,9 @@ export default {
     expandItem(e) {
       this.$emit('item-expanded', e);
     },
+    updateModelValue(val) {
+      this.localModelValue = val;
+    },
   },
 };
 </script>
@@ -321,16 +264,16 @@ export default {
   box-shadow: none !important;
   background: #eeeeee;
 }
-.v-theme--dark .pagination-value  {
+.v-theme--dark .pagination-value {
   color: inherit;
 }
-.v-theme--dark .pagination-value-select  {
+.v-theme--dark .pagination-value-select {
   background-color: inherit;
 }
 .pagination-row {
   align-items: center;
   .v-pagination .v-btn {
-    font-size: 16px!important;
+    font-size: 16px !important;
     border-radius: 7px;
   }
   .v-pagination__item {
@@ -358,9 +301,8 @@ export default {
 }
 .pagination-select__mobile {
   max-width: 18ch;
-
 }
-.data-table__settings-checkbox label{
+.data-table__settings-checkbox label {
   font-size: 0.7rem;
 }
 .data-table-toolbar-content {

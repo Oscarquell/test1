@@ -1,25 +1,41 @@
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, watch, ref } from 'vue'
 
 const props = defineProps<{
-  dialog: boolean;
-  title: string;
-  confirmText: string;
-}>();
+  dialog: boolean
+  title: string
+  confirmText: string
+}>()
 
-const emit = defineEmits(['confirm', 'close']);
+const emit = defineEmits(['confirm', 'close', 'update:dialog'])
+
+// Создаём локальную копию пропса
+const localDialog = ref(props.dialog)
+
+// Следим за внешним пропсом
+watch(() => props.dialog, (newVal) => {
+  localDialog.value = newVal
+})
+
+// Следим за локальной переменной и эмитим изменения наружу
+watch(localDialog, (newVal) => {
+  emit('update:dialog', newVal)
+})
 
 const closeDialog = () => {
-  emit('close');
-};
+  localDialog.value = false
+  emit('close')
+}
 
 const confirmAction = () => {
-  emit('confirm');
-};
+  emit('confirm')
+  localDialog.value = false
+  emit('close')
+}
 </script>
 
 <template>
-  <v-dialog v-model="props.dialog" max-width="600px">
+  <v-dialog v-model="localDialog" max-width="600px">
     <v-card>
       <v-card-title class="headline">{{ props.title }}</v-card-title>
 
